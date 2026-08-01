@@ -5,6 +5,49 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.3.0] - 2026-08-01
+
+### Added (Phase 3: Audio Preprocessing Subsystem)
+- **Audio Loader**: `AudioLoader` loading raw PCM waveform signals from `.wav`, `.mp3`, and `.flac` files into memory arrays.
+- **Audio Standardization**: `AudioStandardizer` executing stereo to mono conversion, resampling audio to **22,050 Hz**, and normalizing peak amplitude to `[-0.95, 0.95]`.
+- **Silence Processing**: `SilenceProcessor` trimming leading and trailing silent frames using configurable decibel threshold (`-40.0` dB).
+- **Background Noise Reduction**: `NoiseReducer` providing optional background noise reduction filter with configurable enable/disable toggle.
+- **Fixed-Length Standardization**: `LengthStandardizer` trimming longer clips and zero-padding shorter clips to exact **4.0 seconds (88,200 samples at 22,050 Hz)**.
+- **Batch Processing Pipeline**: `PreprocessingPipeline` recursively processing dataset raw folders to `dataset/processed/{classes}`, maintaining raw dataset folder tree structure, skipping already processed files, displaying progress, and handling per-file errors gracefully.
+- **Metadata Generation**: `MetadataGenerator` exporting summary metadata JSON reports (`dataset/processed/preprocessed_metadata.json`).
+- **Domain Exceptions & Data Models**: Added `PreprocessingError`, `AudioLoadError`, `UnsupportedFormatError`, `ProcessingError`, `CorruptedAudioError`, `RawAudioData`, `ProcessedAudioSignal`, `ProcessedFileMetadata`, and `BatchPreprocessingSummary`.
+- **Automated Test Suite**: Added `app/tests/test_audio_preprocessing.py` (17/17 system tests passing).
+- **Subsystem Architecture Docs**: Added `app/docs/Audio_Preprocessing.md` and updated `README.md`, `app/ai/preprocessing/README.md`, `Software_Architecture.md`, `Development_Progress.md`, and `Module_Relationship.md`.
+
+### Created Files
+- `app/ai/preprocessing/exceptions.py`
+- `app/ai/preprocessing/models.py`
+- `app/ai/preprocessing/audio_loader.py`
+- `app/ai/preprocessing/audio_standardizer.py`
+- `app/ai/preprocessing/silence_processor.py`
+- `app/ai/preprocessing/noise_reducer.py`
+- `app/ai/preprocessing/length_standardizer.py`
+- `app/ai/preprocessing/metadata_generator.py`
+- `app/ai/preprocessing/preprocessing_pipeline.py`
+- `app/tests/test_audio_preprocessing.py`
+- `app/docs/Audio_Preprocessing.md`
+
+### Modified Files
+- `config.py` (added `PreprocessingConfig` settings)
+- `app/ai/preprocessing/__init__.py` (exported clean public API)
+- `app/ai/preprocessing/audio_preprocessor.py` (integrated audio preprocessing standardizers)
+- `app/ai/preprocessing/README.md` (expanded public methods, configuration options, and pipeline workflow)
+- `README.md` (updated progress tracker, completed features, workflow diagram, and next phase)
+- `app/docs/Software_Architecture.md` (updated architecture specs)
+- `app/docs/Development_Progress.md` (updated phase roadmap matrix)
+- `app/docs/Module_Relationship.md` (updated module handshakes)
+- `CHANGELOG.md`
+
+### Next Planned Module
+- **Phase 4**: Feature Extraction Subsystem (`app/ai/feature_extraction/`).
+
+---
+
 ## [0.2.0] - 2026-08-01
 
 ### Added (Phase 2: Dataset Management Subsystem)
@@ -14,37 +57,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Dataset Validator**: `DatasetValidator` performing automated checks for missing class folders, empty directories, unsupported file formats, corrupted/0-byte files, duplicate files (SHA-256 matching), and invalid filenames.
 - **Dataset Statistics**: `DatasetStatisticsCalculator` computing total files, dataset size in MB, per-class counts, duration min/max/avg, sample rate breakdowns, and exporting JSON reports to `app/outputs/dataset_stats.json`.
 - **Dataset Explorer**: `DatasetExplorer` providing search, filtering (by query keyword, class, or duration range), sample previews, and folder summary inspection.
-- **Domain Exceptions**: Custom exception hierarchy (`DatasetNotFoundError`, `MissingClassError`, `CorruptedAudioError`, `InvalidDatasetError`).
-- **Domain Models**: Value objects (`AudioFileMetadata`, `DatasetItem`, `DatasetManifest`, `ValidationReport`, `DatasetStats`).
-- **Documentation & Architecture Docs**: Added `app/docs/Software_Architecture.md`, `app/docs/Development_Progress.md`, `app/docs/Module_Relationship.md`, and updated `README.md` and `app/ai/dataset/README.md`.
-- **Automated Test Suite**: Added `app/tests/test_dataset_management.py` with 100% test pass rate (11/11 tests).
-
-### Created Files
-- `app/ai/dataset/exceptions.py`
-- `app/ai/dataset/models.py`
-- `app/ai/dataset/dataset_directory_manager.py`
-- `app/ai/dataset/dataset_validator.py`
-- `app/ai/dataset/dataset_statistics.py`
-- `app/ai/dataset/dataset_explorer.py`
-- `app/tests/test_dataset_management.py`
-- `app/docs/Software_Architecture.md`
-- `app/docs/Development_Progress.md`
-- `app/docs/Module_Relationship.md`
-- `CHANGELOG.md`
-
-### Modified Files
-- `config.py` (added `DatasetConfig` settings)
-- `app/ai/dataset/__init__.py` (exported clean public API)
-- `app/ai/dataset/dataset_loader.py` (implemented audio metadata reader & scanner)
-- `app/ai/dataset/README.md` (expanded public methods and usage workflow)
-- `README.md` (updated progress tracker, completed features, folder structure, next phase)
-
-### Known Limitations
-- Audio signal resampling and spectrogram feature extraction are not included in this phase (scheduled for Phase 3 & 4).
-- Audio header reading currently relies on Python standard library `wave` for `.wav` files with fallback parameters for `.mp3`/`.flac`.
-
-### Next Planned Module
-- **Phase 3**: Audio Preprocessing Subsystem (`app/ai/preprocessing/`).
 
 ---
 
@@ -58,4 +70,3 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Environmental context prioritization engine (`ContextManager`) with **Home**, **Road**, and **Office** profiles.
 - ESP32 BLE client interface (`ESP32BLEManager`) and 6-byte binary payload serializer (`HapticPacketSerializer`).
 - FastAPI REST delivery endpoints (`app/api/routes.py`), controllers, services, and system entrypoint (`main.py`).
-- Initial test suite (`app/tests/`).

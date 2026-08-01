@@ -42,7 +42,7 @@ The architecture adheres strictly to **Clean Architecture** principles, maintain
 |          AI PIPELINE SUBSYSTEM          |     |    BLUETOOTH HARDWARE SUBSYSTEM   |
 |  - Dataset Management (app/ai/dataset/) |     |  - HapticPacketSerializer         |
 |  - Preprocessing (app/ai/preprocessing/)|     |  - ESP32BLEManager                |
-|  - Feature Extraction                   |     +-----------------+-----------------+
+|  - Feature Extraction (Phase 4 Next)    |     +-----------------+-----------------+
 |  - BaseSoundClassifier / ModelFactory   |                       |
 +-----------------------------------------+                       v
                                                 +-----------------------------------+
@@ -58,7 +58,7 @@ The architecture adheres strictly to **Clean Architecture** principles, maintain
 ### 2.1 AI Subsystem (`app/ai/`)
 Structured into decoupled pipeline phases:
 - **`dataset/`**: Directory management, multi-format loading (`.wav`, `.mp3`, `.flac`), validation, statistics, and exploration. Target classes: `ambulance`, `car_horn`, `fire_alarm`, `doorbell`, `dog_bark`.
-- **`preprocessing/`**: Resampling (16 kHz), peak normalization, and fixed 1.0-second framing.
+- **`preprocessing/`**: Audio loading (`AudioLoader`), format & rate standardization to **22,050 Hz Mono** (`AudioStandardizer`), silence trimming (`SilenceProcessor`), optional noise reduction (`NoiseReducer`), fixed **4.0-second length standardization** (`LengthStandardizer`), and batch execution (`PreprocessingPipeline`).
 - **`feature_extraction/`**: 64-band Log-Mel Spectrogram extraction.
 - **`models/`**: `BaseSoundClassifier` contract, `ModelFactory`, and `StarterMockClassifier`.
 - **`training/`**: Training pipeline loop and TFLite quantization exporter.
@@ -76,8 +76,8 @@ Structured into decoupled pipeline phases:
 
 ## 3. SOLID Principles Enforcement
 
-- **Single Responsibility Principle (SRP)**: Each class handles a single concern (e.g. `DatasetValidator` only validates; `DatasetStatisticsCalculator` only computes metrics).
-- **Open/Closed Principle (OCP)**: New sound models or data loaders can be added by implementing base abstractions without modifying existing caller code.
-- **Liskov Substitution Principle (LSP)**: All classifier implementations fulfill the `BaseSoundClassifier` interface.
-- **Interface Segregation Principle (ISP)**: Interfaces are lean and focused (`BaseDatasetLoader`, `BasePreprocessor`, `BaseFeatureExtractor`).
-- **Dependency Inversion Principle (DIP)**: Higher-level services (`AlertService`, `SoundInferenceEngine`) depend on abstract contracts rather than concrete implementations.
+- **Single Responsibility Principle (SRP)**: Each preprocessing class handles a single signal operation (`AudioStandardizer` standardizes rate/channels/amplitude; `SilenceProcessor` trims silence; `LengthStandardizer` handles clip length).
+- **Open/Closed Principle (OCP)**: New preprocessors or noise filters can be registered in `PreprocessingPipeline` without modifying existing signal standardizers.
+- **Liskov Substitution Principle (LSP)**: All preprocessor classes adhere to explicit contracts.
+- **Interface Segregation Principle (ISP)**: Interfaces remain lean and focused (`BasePreprocessor`, `AudioLoader`, `SilenceProcessor`).
+- **Dependency Inversion Principle (DIP)**: Higher-level services (`PreprocessingPipeline`, `AlertService`) depend on abstract contracts rather than hardcoded implementations.

@@ -13,27 +13,32 @@ This document describes the structural relationships, data flow dependencies, an
                |                         |                         |
                v                         v                         v
 +-----------------------------+ +-----------------+ +------------------------------+
-|  app/ai/dataset/            | | app/context/    | | app/bluetooth/               |
-|  - DatasetDirectoryManager  | | - ModeProfile   | | - HapticPacketSerializer     |
-|  - AudioDatasetLoader       | | - Priority    | | - ESP32BLEManager            |
-|  - DatasetValidator         | | - ContextMgr  | +--------------+---------------+
-|  - DatasetStatistics        | +--------+--------+                |
-|  - DatasetExplorer          |          |                         |
+| app/ai/dataset/             | | app/context/    | | app/bluetooth/               |
+| - DatasetDirectoryManager   | | - ModeProfile   | | - HapticPacketSerializer     |
+| - AudioDatasetLoader        | | - Priority      | | - ESP32BLEManager            |
+| - DatasetValidator          | | - ContextMgr    | +--------------+---------------+
+| - DatasetStatistics         | +--------+--------+                |
+| - DatasetExplorer           |          |                         |
 +--------------+--------------+          |                         |
                |                         |                         |
-               | Manifest/Paths          | Mode Priority           | Haptic Binary
+               | Raw Audio Paths         | Mode Priority           | Haptic Binary
                v                         v                         v
 +-----------------------------+ +-----------------+ +------------------------------+
 | app/ai/preprocessing/       | | app/services/   | | ESP32 Wearable Device        |
-| - AudioPreprocessor         | | - AlertService  |<+ (Haptic Vibration Motor)     |
-+--------------+--------------+ | - AudioService  | +------------------------------+
-               | Cleaned Signal +--------+--------+
-               v                         ^
-+-----------------------------+          | Handled Alert Record
+| - AudioLoader               | | - AlertService  |<+ (Haptic Vibration Motor)     |
+| - AudioStandardizer (22kHz) | | - AudioService  | +------------------------------+
+| - SilenceProcessor (-40dB)  | +--------+--------+
+| - NoiseReducer              |          ^ Handled Alert Record
+| - LengthStandardizer (4.0s) |          |
+| - PreprocessingPipeline     |          |
++--------------+--------------+          |
+               | 22050Hz 4.0s WAV        |
+               v                         |
++-----------------------------+          |
 | app/ai/feature_extraction/  |          |
 | - SpectrogramExtractor      |          |
 +--------------+--------------+          |
-               | Spectrogram             |
+               | Spectrogram Matrix      |
                v                         |
 +-----------------------------+          |
 | app/ai/inference/           |          |
@@ -46,15 +51,16 @@ This document describes the structural relationships, data flow dependencies, an
 ## 2. Detailed Data Handshake Specifications
 
 ### 2.1 Dataset Subsystem -> Preprocessing Subsystem
-- **Provider**: `app.ai.dataset.AudioDatasetLoader`
-- **Consumer**: `app.ai.preprocessing.AudioPreprocessor` (Phase 3)
-- **Data Object**: `DatasetManifest` containing `DatasetItem` entries with `metadata.file_path` pointing to raw sound samples (`ambulance`, `car_horn`, `fire_alarm`, `doorbell`, `dog_bark`).
-- **Contract**: `AudioPreprocessor` consumes valid file paths validated by `DatasetValidator`.
+- **Provider**: `app.ai.dataset.AudioDatasetLoader` & `DatasetDirectoryManager`
+- **Consumer**: `app.ai.preprocessing.PreprocessingPipeline`
+- **Data Object**: Raw sound file paths (`dataset/raw/{ambulance, car_horn, fire_alarm, doorbell, dog_bark}/*.wav`).
+- **Contract**: `PreprocessingPipeline` processes raw files and outputs standardized samples to `dataset/processed/{classes}`.
 
 ### 2.2 Preprocessing Subsystem -> Feature Extraction
-- **Provider**: `AudioPreprocessor`
+- **Provider**: `app.ai.preprocessing.PreprocessingPipeline`
 - **Consumer**: `SpectrogramExtractor` (Phase 4)
-- **Data Object**: 1D normalized float32 waveform numpy/tensor array (16,000 samples for 1.0 second).
+- **Data Object**: Standardized 16-bit PCM WAV audio file (22,050 Hz, Mono, 4.0s = 88,200 samples) and `preprocessed_metadata.json`.
+- **Contract**: Feature extractor loads 4.0s 22,050 Hz preprocessed audio samples for spectrogram conversion.
 
 ### 2.3 Feature Extraction -> AI Model / Inference Engine
 - **Provider**: `SpectrogramExtractor`
@@ -65,10 +71,9 @@ This document describes the structural relationships, data flow dependencies, an
 - **Provider**: `SoundInferenceEngine`
 - **Consumer**: `ContextManager` & `AlertService`
 - **Data Object**: Tuple of `(sound_label: str, confidence_score: float)`.
-- **Contract**: `AlertService` passes sound label and confidence to `ContextManager.evaluate_sound()`.
 
 ### 2.5 Alert Service -> Bluetooth Subsystem
 - **Provider**: `AlertService`
 - **Consumer**: `HapticPacketSerializer` & `ESP32BLEManager`
 - **Data Object**: `alert_id` string and `SoundPriority` enum.
-- **Contract**: `HapticPacketSerializer.encode()` produces 6-byte binary payload transmitted over BLE GATT write.
+- **Contract**: `HapticPacketSerializer.encode()` produces 6-byte binary payload transmitted over BLE GATT write to ESP32.

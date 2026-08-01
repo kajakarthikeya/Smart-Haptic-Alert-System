@@ -6,7 +6,7 @@
 | :---: | :--- | :---: | :---: |
 | **Phase 1** | Project Initialization & Clean Architecture | ✅ Completed | v0.1.0 |
 | **Phase 2** | Dataset Management Subsystem | ✅ Completed | v0.2.0 |
-| **Phase 3** | Audio Preprocessing Subsystem | ⬜ Planned | v0.3.0 |
+| **Phase 3** | Audio Preprocessing Subsystem | ✅ Completed | v0.3.0 |
 | **Phase 4** | Feature Extraction Subsystem | ⬜ Planned | v0.4.0 |
 | **Phase 5** | AI Model Training & Quantization | ⬜ Planned | v0.5.0 |
 | **Phase 6** | Model Evaluation & Benchmarking | ⬜ Planned | v0.6.0 |
@@ -35,16 +35,22 @@
 - Built `DatasetValidator` checking empty folders, unsupported formats, corrupted audio, duplicate files, missing classes, and invalid filenames.
 - Developed `DatasetStatisticsCalculator` generating metrics and exporting JSON reports to `app/outputs/dataset_stats.json`.
 - Implemented `DatasetExplorer` for search, filtering, sample previews, and folder summaries.
-- Implemented custom exceptions (`DatasetNotFoundError`, `MissingClassError`, `CorruptedAudioError`, `InvalidDatasetError`).
-- Created automated test suite `app/tests/test_dataset_management.py` (11/11 tests passing).
+
+### Phase 3: Audio Preprocessing Subsystem (v0.3.0)
+- Implemented multi-format `AudioLoader` loading raw PCM arrays from `.wav`, `.mp3`, and `.flac`.
+- Created `AudioStandardizer` for mono conversion, 22,050 Hz resampling, and peak amplitude normalization to `[-0.95, 0.95]`.
+- Implemented `SilenceProcessor` for leading and trailing silence trimming with `-40.0` dB configurable threshold.
+- Developed `NoiseReducer` providing optional background noise reduction filter.
+- Created `LengthStandardizer` for fixed 4.0-second (88,200 samples) length trimming and zero-padding.
+- Built `PreprocessingPipeline` for recursive batch dataset processing into `dataset/processed/{classes}`, maintaining raw dataset folder tree structure.
+- Developed `MetadataGenerator` exporting summary metadata JSON reports (`dataset/processed/preprocessed_metadata.json`).
+- Developed comprehensive test suite `app/tests/test_audio_preprocessing.py` (17/17 total system unit tests passing).
 
 ---
 
 ## 3. Next Planned Phase
 
-### Phase 3: Audio Preprocessing Subsystem (`app/ai/preprocessing/`)
-- Target: Raw audio wave loading and signal transformation pipeline.
-- Implement resampling to standard 16 kHz.
-- Implement peak amplitude normalization to range [-1.0, 1.0].
-- Implement fixed 1.0-second framing (padding / truncation).
-- Batch save preprocessed waveforms to `dataset/processed/`.
+### Phase 4: Feature Extraction Subsystem (`app/ai/feature_extraction/`)
+- Target: Transform 4.0s 22,050 Hz preprocessed audio samples into Log-Mel Spectrogram feature matrices.
+- Implement FFT windowing (`n_fft=512`), hop length (`hop_length=160`), and Mel filterbanks (`n_mels=64`).
+- Save extracted feature tensors to disk ready for neural network training.

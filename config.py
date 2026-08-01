@@ -89,6 +89,27 @@ class DatasetConfig:
 
 
 @dataclass(frozen=True)
+class PreprocessingConfig:
+    """Audio preprocessing and standardization settings."""
+    target_sample_rate: int = field(default_factory=lambda: int(os.getenv("PREPROCESS_SAMPLE_RATE", "22050")))
+    target_channels: int = field(default_factory=lambda: int(os.getenv("PREPROCESS_CHANNELS", "1")))
+    target_duration_sec: float = field(
+        default_factory=lambda: float(os.getenv("PREPROCESS_TARGET_DURATION_SEC", "4.0"))
+    )
+    silence_threshold_db: float = field(
+        default_factory=lambda: float(os.getenv("PREPROCESS_SILENCE_THRESHOLD_DB", "-40.0"))
+    )
+    enable_noise_reduction: bool = field(
+        default_factory=lambda: os.getenv("PREPROCESS_ENABLE_NOISE_REDUCTION", "true").lower() == "true"
+    )
+    bit_depth: int = field(default_factory=lambda: int(os.getenv("PREPROCESS_BIT_DEPTH", "16")))
+    target_format: str = field(default_factory=lambda: os.getenv("PREPROCESS_TARGET_FORMAT", "wav"))
+    processed_dir: Path = field(
+        default_factory=lambda: BASE_DIR / os.getenv("DATASET_PROCESSED_DIR", "dataset/processed")
+    )
+
+
+@dataclass(frozen=True)
 class PathConfig:
     """File system paths for model artifacts, logs, and outputs."""
     base_dir: Path = BASE_DIR
@@ -109,10 +130,12 @@ class AppSettings:
         self.api = APIConfig()
         self.paths = PathConfig()
         self.dataset = DatasetConfig()
+        self.preprocessing = PreprocessingConfig()
 
         # Ensure directories exist
         self.paths.log_dir.mkdir(parents=True, exist_ok=True)
         self.paths.output_dir.mkdir(parents=True, exist_ok=True)
+        self.dataset.processed_dir.mkdir(parents=True, exist_ok=True)
 
     def reload(self) -> None:
         """Reload environment settings dynamically."""
