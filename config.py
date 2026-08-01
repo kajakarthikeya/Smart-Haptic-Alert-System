@@ -74,6 +74,21 @@ class APIConfig:
 
 
 @dataclass(frozen=True)
+class DatasetConfig:
+    """Dataset storage paths and target sound class configurations."""
+    root_dir: Path = field(default_factory=lambda: BASE_DIR / os.getenv("DATASET_ROOT_DIR", "dataset"))
+    raw_dir: Path = field(default_factory=lambda: BASE_DIR / os.getenv("DATASET_RAW_DIR", "dataset/raw"))
+    processed_dir: Path = field(
+        default_factory=lambda: BASE_DIR / os.getenv("DATASET_PROCESSED_DIR", "dataset/processed")
+    )
+    test_audio_dir: Path = field(
+        default_factory=lambda: BASE_DIR / os.getenv("DATASET_TEST_DIR", "dataset/test_audio")
+    )
+    target_classes: tuple[str, ...] = ("ambulance", "car_horn", "fire_alarm", "doorbell", "dog_bark")
+    supported_extensions: tuple[str, ...] = (".wav", ".mp3", ".flac")
+
+
+@dataclass(frozen=True)
 class PathConfig:
     """File system paths for model artifacts, logs, and outputs."""
     base_dir: Path = BASE_DIR
@@ -93,6 +108,7 @@ class AppSettings:
         self.ble = BLEConfig()
         self.api = APIConfig()
         self.paths = PathConfig()
+        self.dataset = DatasetConfig()
 
         # Ensure directories exist
         self.paths.log_dir.mkdir(parents=True, exist_ok=True)
