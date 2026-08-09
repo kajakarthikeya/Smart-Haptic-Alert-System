@@ -1,7 +1,10 @@
 """Feature Extraction Interface & Log-Mel Spectrogram Generator."""
 
 from abc import ABC, abstractmethod
-from typing import Any
+from typing import Any, Optional
+import numpy as np
+
+from app.ai.feature_extraction.feature_extractor import FeatureExtractor
 from app.utils.logger import get_logger
 from config import settings
 
@@ -29,10 +32,10 @@ class SpectrogramExtractor(BaseFeatureExtractor):
 
     def __init__(
         self,
-        sample_rate: int = 16000,
-        n_fft: int = 512,
-        hop_length: int = 160,
-        n_mels: int = 64,
+        sample_rate: Optional[int] = None,
+        n_fft: Optional[int] = None,
+        hop_length: Optional[int] = None,
+        n_mels: Optional[int] = None,
     ) -> None:
         """Initializes spectral parameters.
 
@@ -42,23 +45,30 @@ class SpectrogramExtractor(BaseFeatureExtractor):
             hop_length: Number of samples between successive frames.
             n_mels: Number of Mel frequency bands.
         """
-        self._sample_rate = sample_rate or settings.audio.sample_rate
-        self._n_fft = n_fft or settings.audio.n_fft
-        self._hop_length = hop_length or settings.audio.hop_length
-        self._n_mels = n_mels or settings.audio.n_mels
+        self._sample_rate = sample_rate or settings.preprocessing.target_sample_rate
+        self._n_fft = n_fft or settings.feature_extraction.n_fft
+        self._hop_length = hop_length or settings.feature_extraction.hop_length
+        self._n_mels = n_mels or settings.feature_extraction.n_mels
+
+        self._extractor = FeatureExtractor(
+            sample_rate=self._sample_rate,
+            n_fft=self._n_fft,
+            hop_length=self._hop_length,
+            n_mels=self._n_mels,
+        )
+
         logger.info(
-            f"SpectrogramExtractor initialized (n_fft={self._n_fft}, "
+            f"SpectrogramExtractor initialized (sr={self._sample_rate}, n_fft={self._n_fft}, "
             f"hop_length={self._hop_length}, n_mels={self._n_mels})"
         )
 
-    def extract(self, signal: Any) -> Any:
-        """Computes log-mel spectrogram placeholder.
+    def extract(self, signal: Any) -> np.ndarray:
+        """Computes log-mel spectrogram array using Librosa feature engine.
 
         Args:
-            signal: Audio waveform.
+            signal: Audio waveform array.
 
         Returns:
-            Placeholder feature tensor array.
+            2D numpy array of shape (n_mels, time_steps).
         """
-        # Placeholder feature transformation (will use librosa/tensorflow in AI phase)
-        return signal
+        return self._extractor.extract_mel_spectrogram(signal, sr=self._sample_rate)

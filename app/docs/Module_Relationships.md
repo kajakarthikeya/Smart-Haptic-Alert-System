@@ -36,9 +36,16 @@ This document describes the structural relationships, data flow dependencies, an
                v                         |
 +-----------------------------+          |
 | app/ai/feature_extraction/  |          |
-| - SpectrogramExtractor      |          |
+| - FeatureExtractor (7 Feats)|          |
+| - LabelEncoder              |          |
+| - FeatureNormalizer         |          |
+| - StratifiedDatasetSplitter |          |
+| - FeatureStorageManager     |          |
+| - FeatureVisualizer         |          |
+| - FeatureExtractionPipeline |          |
 +--------------+--------------+          |
-               | Spectrogram Matrix      |
+               | dataset_splits.npz      |
+               | class_names.json        |
                v                         |
 +-----------------------------+          |
 | app/ai/inference/           |          |

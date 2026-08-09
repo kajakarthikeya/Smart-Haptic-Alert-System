@@ -5,6 +5,49 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.4.0] - 2026-08-09
+
+### Added (Phase 4: Feature Extraction Subsystem)
+- **Feature Extractor Engine**: `FeatureExtractor` computing 7 acoustic feature representations using **Librosa**: MFCC (40 coefficients), Mel Spectrogram (128 dB bands), Zero Crossing Rate (ZCR), Spectral Centroid, Spectral Bandwidth, Spectral Rolloff, and Chroma STFT (12 bins). Supports stacked 2D composite matrices (`[184, 173]`) and 1D summary vectors (`[368]`).
+- **Label Encoder**: `LabelEncoder` implementing bidirectional mapping between sound class strings (`ambulance`, `car_horn`, `fire_alarm`, `doorbell`, `dog_bark`) and integer IDs (`0, 1, 2, 3, 4`), persisting to `app/ai/features/class_names.json`.
+- **Feature Normalizer**: `FeatureNormalizer` computing Z-score and Min-Max scaling parameters on training data without data leakage, saving scaler parameters to `app/ai/features/scaler_params.json`.
+- **Stratified Dataset Splitter**: `StratifiedDatasetSplitter` performing reproducible 70% Train / 15% Validation / 15% Testing dataset splits using configurable random seed (`random_seed=42`).
+- **Storage & Metadata Management**: `FeatureStorageManager` managing compressed dataset archive `.npz` files and exporting comprehensive metadata reports to `app/ai/features/feature_metadata.json`.
+- **Visualization Generator**: `FeatureVisualizer` rendering Mel Spectrogram heatmaps, MFCC heatmaps, and class distribution bar charts to `app/outputs/feature_visualizations/`.
+- **Batch Processing Pipeline**: `FeatureExtractionPipeline` automatically orchestrating dataset feature extraction, validation, splitting, normalization, and file storage.
+- **Domain Exceptions**: Custom exceptions `FeatureExtractionError`, `InvalidFeatureError`, `FeatureShapeError`, `LabelEncodingError`, and `FeatureStorageError`.
+- **Automated Test Suite**: Added `app/tests/test_feature_extraction.py` (27 total system unit tests passing).
+- **Subsystem Architecture Docs**: Added `app/docs/Feature_Extraction.md` and updated `README.md`, `app/ai/feature_extraction/README.md`, `Software_Architecture.md`, `Development_Progress.md`, `Module_Relationship.md`, and `Module_Relationships.md`.
+
+### Created Files
+- `app/ai/feature_extraction/exceptions.py`
+- `app/ai/feature_extraction/label_encoder.py`
+- `app/ai/feature_extraction/normalizer.py`
+- `app/ai/feature_extraction/feature_extractor.py`
+- `app/ai/feature_extraction/dataset_splitter.py`
+- `app/ai/feature_extraction/storage.py`
+- `app/ai/feature_extraction/visualizer.py`
+- `app/ai/feature_extraction/pipeline.py`
+- `app/tests/test_feature_extraction.py`
+- `app/docs/Feature_Extraction.md`
+- `app/docs/Module_Relationships.md`
+
+### Modified Files
+- `config.py` (added `FeatureExtractionConfig` settings and target paths)
+- `app/ai/feature_extraction/__init__.py` (exported public API)
+- `app/ai/feature_extraction/spectrogram_extractor.py` (integrated Librosa feature extraction backend)
+- `app/ai/feature_extraction/README.md` (expanded public documentation and usage instructions)
+- `README.md` (updated progress tracker, completed features, workflow diagram, and next phase)
+- `app/docs/Software_Architecture.md` (updated architecture specs)
+- `app/docs/Development_Progress.md` (updated phase roadmap matrix and logs)
+- `app/docs/Module_Relationship.md` (updated module handshakes)
+- `CHANGELOG.md`
+
+### Next Planned Module
+- **Phase 5**: AI Model Training & Quantization Subsystem (`app/ai/training/` & `app/ai/models/`).
+
+---
+
 ## [0.3.0] - 2026-08-01
 
 ### Added (Phase 3: Audio Preprocessing Subsystem)

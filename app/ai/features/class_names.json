@@ -1,0 +1,24 @@
+{
+  "class_to_id": {
+    "ambulance": 0,
+    "car_horn": 1,
+    "fire_alarm": 2,
+    "doorbell": 3,
+    "dog_bark": 4
+  },
+  "id_to_class": {
+    "0": "ambulance",
+    "1": "car_horn",
+    "2": "fire_alarm",
+    "3": "doorbell",
+    "4": "dog_bark"
+  },
+  "classes": [
+    "ambulance",
+    "car_horn",
+    "fire_alarm",
+    "doorbell",
+    "dog_bark"
+  ],
+  "num_classes": 5
+}

@@ -7,7 +7,7 @@
 | **Phase 1** | Project Initialization & Clean Architecture | ✅ Completed | v0.1.0 |
 | **Phase 2** | Dataset Management Subsystem | ✅ Completed | v0.2.0 |
 | **Phase 3** | Audio Preprocessing Subsystem | ✅ Completed | v0.3.0 |
-| **Phase 4** | Feature Extraction Subsystem | ⬜ Planned | v0.4.0 |
+| **Phase 4** | Feature Extraction Subsystem | ✅ Completed | v0.4.0 |
 | **Phase 5** | AI Model Training & Quantization | ⬜ Planned | v0.5.0 |
 | **Phase 6** | Model Evaluation & Benchmarking | ⬜ Planned | v0.6.0 |
 | **Phase 7** | Real-Time Sound Recognition Engine | ⬜ Planned | v0.7.0 |
@@ -46,11 +46,21 @@
 - Developed `MetadataGenerator` exporting summary metadata JSON reports (`dataset/processed/preprocessed_metadata.json`).
 - Developed comprehensive test suite `app/tests/test_audio_preprocessing.py` (17/17 total system unit tests passing).
 
+### Phase 4: Feature Extraction Subsystem (v0.4.0)
+- Built Librosa-based `FeatureExtractor` extracting 7 acoustic feature representations (MFCC, Mel Spectrogram, ZCR, Spectral Centroid, Spectral Bandwidth, Spectral Rolloff, Chroma).
+- Implemented persistent bidirectional string-to-int `LabelEncoder` (`class_names.json`).
+- Created `FeatureNormalizer` implementing Z-score and Min-Max scaling with zero-leakage training fit (`scaler_params.json`).
+- Implemented `StratifiedDatasetSplitter` producing reproducible 70% Train / 15% Val / 15% Test dataset splits.
+- Developed `FeatureStorageManager` handling `.npz` archive serialization and JSON metadata generation (`feature_metadata.json`).
+- Created `FeatureVisualizer` rendering Mel Spectrogram heatmaps, MFCC heatmaps, and class distribution bar charts (`app/outputs/feature_visualizations/`).
+- Implemented automated `FeatureExtractionPipeline` batch orchestrator processing `dataset/processed/` audio.
+- Developed unit test suite `app/tests/test_feature_extraction.py` (27/27 total system unit tests passing).
+
 ---
 
 ## 3. Next Planned Phase
 
-### Phase 4: Feature Extraction Subsystem (`app/ai/feature_extraction/`)
-- Target: Transform 4.0s 22,050 Hz preprocessed audio samples into Log-Mel Spectrogram feature matrices.
-- Implement FFT windowing (`n_fft=512`), hop length (`hop_length=160`), and Mel filterbanks (`n_mels=64`).
-- Save extracted feature tensors to disk ready for neural network training.
+### Phase 5: AI Model Training & Quantization (`app/ai/training/` & `app/ai/models/`)
+- Load extracted dataset splits (`dataset_splits.npz`), class mappings (`class_names.json`), and scaler parameters (`scaler_params.json`).
+- Build and train 2D CNN architecture for environmental sound classification across target classes.
+- Export trained model weights and TFLite quantized models for edge device deployment.

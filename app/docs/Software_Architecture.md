@@ -59,7 +59,7 @@ The architecture adheres strictly to **Clean Architecture** principles, maintain
 Structured into decoupled pipeline phases:
 - **`dataset/`**: Directory management, multi-format loading (`.wav`, `.mp3`, `.flac`), validation, statistics, and exploration. Target classes: `ambulance`, `car_horn`, `fire_alarm`, `doorbell`, `dog_bark`.
 - **`preprocessing/`**: Audio loading (`AudioLoader`), format & rate standardization to **22,050 Hz Mono** (`AudioStandardizer`), silence trimming (`SilenceProcessor`), optional noise reduction (`NoiseReducer`), fixed **4.0-second length standardization** (`LengthStandardizer`), and batch execution (`PreprocessingPipeline`).
-- **`feature_extraction/`**: 64-band Log-Mel Spectrogram extraction.
+- **`feature_extraction/`**: Librosa-based 7-feature extraction (`FeatureExtractor`), persistent label encoding (`LabelEncoder`), Z-score/MinMax feature normalization (`FeatureNormalizer`), stratified 70/15/15 train/val/test splitting (`StratifiedDatasetSplitter`), storage manager (`FeatureStorageManager`), visualization generator (`FeatureVisualizer`), and batch execution (`FeatureExtractionPipeline`).
 - **`models/`**: `BaseSoundClassifier` contract, `ModelFactory`, and `StarterMockClassifier`.
 - **`training/`**: Training pipeline loop and TFLite quantization exporter.
 - **`inference/`**: End-to-end `SoundInferenceEngine` integrating preprocessor, feature extractor, and classifier.

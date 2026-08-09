@@ -110,6 +110,39 @@ class PreprocessingConfig:
 
 
 @dataclass(frozen=True)
+class FeatureExtractionConfig:
+    """Audio feature extraction and dataset splitting settings."""
+    n_mfcc: int = field(default_factory=lambda: int(os.getenv("N_MFCC", "40")))
+    n_fft: int = field(default_factory=lambda: int(os.getenv("N_FFT", "2048")))
+    hop_length: int = field(default_factory=lambda: int(os.getenv("HOP_LENGTH", "512")))
+    win_length: Optional[int] = field(
+        default_factory=lambda: int(os.getenv("WIN_LENGTH")) if os.getenv("WIN_LENGTH") else None
+    )
+    n_mels: int = field(default_factory=lambda: int(os.getenv("N_MELS", "128")))
+    fmin: float = field(default_factory=lambda: float(os.getenv("FMIN", "0.0")))
+    fmax: Optional[float] = field(
+        default_factory=lambda: float(os.getenv("FMAX")) if os.getenv("FMAX") else None
+    )
+    n_chroma: int = field(default_factory=lambda: int(os.getenv("N_CHROMA", "12")))
+    enable_normalization: bool = field(
+        default_factory=lambda: os.getenv("ENABLE_FEATURE_NORMALIZATION", "true").lower() == "true"
+    )
+    normalization_type: str = field(
+        default_factory=lambda: os.getenv("FEATURE_NORMALIZATION_TYPE", "z_score")
+    )
+    train_ratio: float = field(default_factory=lambda: float(os.getenv("TRAIN_SPLIT_RATIO", "0.70")))
+    val_ratio: float = field(default_factory=lambda: float(os.getenv("VAL_SPLIT_RATIO", "0.15")))
+    test_ratio: float = field(default_factory=lambda: float(os.getenv("TEST_SPLIT_RATIO", "0.15")))
+    random_seed: int = field(default_factory=lambda: int(os.getenv("RANDOM_SEED", "42")))
+    features_dir: Path = field(
+        default_factory=lambda: BASE_DIR / os.getenv("FEATURES_DIR", "app/ai/features")
+    )
+    visualization_dir: Path = field(
+        default_factory=lambda: BASE_DIR / os.getenv("VISUALIZATION_DIR", "app/outputs/feature_visualizations")
+    )
+
+
+@dataclass(frozen=True)
 class PathConfig:
     """File system paths for model artifacts, logs, and outputs."""
     base_dir: Path = BASE_DIR
@@ -131,11 +164,14 @@ class AppSettings:
         self.paths = PathConfig()
         self.dataset = DatasetConfig()
         self.preprocessing = PreprocessingConfig()
+        self.feature_extraction = FeatureExtractionConfig()
 
         # Ensure directories exist
         self.paths.log_dir.mkdir(parents=True, exist_ok=True)
         self.paths.output_dir.mkdir(parents=True, exist_ok=True)
         self.dataset.processed_dir.mkdir(parents=True, exist_ok=True)
+        self.feature_extraction.features_dir.mkdir(parents=True, exist_ok=True)
+        self.feature_extraction.visualization_dir.mkdir(parents=True, exist_ok=True)
 
     def reload(self) -> None:
         """Reload environment settings dynamically."""

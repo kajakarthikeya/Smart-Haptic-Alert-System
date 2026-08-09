@@ -1,0 +1,36 @@
+{
+  "feature_types": [
+    "mfcc",
+    "mel_spectrogram",
+    "zero_crossing_rate",
+    "spectral_centroid",
+    "spectral_bandwidth",
+    "spectral_rolloff",
+    "chroma"
+  ],
+  "number_of_samples": 20,
+  "feature_dimensions": {
+    "composite_matrix_shape": [
+      184,
+      173
+    ],
+    "summary_vector_shape": [
+      368
+    ]
+  },
+  "class_distribution": {
+    "ambulance": 4,
+    "car_horn": 4,
+    "fire_alarm": 4,
+    "doorbell": 4,
+    "dog_bark": 4
+  },
+  "sample_rate": 22050,
+  "fft_size": 2048,
+  "hop_length": 512,
+  "win_length": 2048,
+  "number_of_mfccs": 40,
+  "number_of_mel_bands": 128,
+  "number_of_chroma_bins": 12,
+  "extraction_timestamp": "2026-08-09T16:26:06.013500+00:00"
+}

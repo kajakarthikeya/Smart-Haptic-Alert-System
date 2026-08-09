@@ -9,8 +9,8 @@ An AI-powered wearable assistance system for hearing-impaired users that detects
 - [x] **Phase 1: Project Initialization & Clean Architecture Setup**
 - [x] **Phase 2: Dataset Management Subsystem**
 - [x] **Phase 3: Audio Preprocessing Subsystem**
-- [ ] **Phase 4: Feature Extraction Subsystem** *(Next Phase)*
-- [ ] **Phase 5: AI Model Training & Quantization**
+- [x] **Phase 4: Feature Extraction Subsystem**
+- [ ] **Phase 5: AI Model Training & Quantization** *(Next Phase)*
 - [ ] **Phase 6: Model Evaluation & Benchmarking**
 - [ ] **Phase 7: Real-Time Sound Recognition Engine**
 - [ ] **Phase 8: Context-Aware Decision Engine**
@@ -42,48 +42,60 @@ An AI-powered wearable assistance system for hearing-impaired users that detects
 
 ### Phase 3: Audio Preprocessing Subsystem (`app/ai/preprocessing/`)
 - **Multi-Format Audio Loader**: `AudioLoader` loading raw PCM audio signals from `.wav`, `.mp3`, and `.flac`.
-- **Audio Standardization**: `AudioStandardizer` converting stereo audio to mono, resampling signals to **22,050 Hz**, and normalizing peak amplitude to `[-1.0, 1.0]`.
+- **Audio Standardization**: `AudioStandardizer` converting stereo audio to mono, resampling signals to **22,050 Hz**, and normalizing peak amplitude to `[-0.95, 0.95]`.
 - **Silence Processing**: `SilenceProcessor` removing leading and trailing silent frames using configurable decibel threshold (`-40.0` dB).
 - **Background Noise Reduction**: `NoiseReducer` providing optional background noise reduction filter.
-- **Fixed-Length Standardization**: `LengthStandardizer` trimming longer clips and zero-padding shorter clips to exactly **4.0 seconds** (88,200 samples at 22050 Hz).
+- **Fixed-Length Standardization**: `LengthStandardizer` trimming longer clips and zero-padding shorter clips to exactly **4.0 seconds** (88,200 samples at 22,050 Hz).
 - **Batch Processing Pipeline**: `PreprocessingPipeline` recursively processing dataset raw folders to `dataset/processed/{classes}`, preserving folder hierarchy, skipping already processed files, displaying progress, and handling per-file errors gracefully.
 - **Metadata Generation**: `MetadataGenerator` exporting structured JSON metadata for preprocessed datasets (`dataset/processed/preprocessed_metadata.json`).
 
+### Phase 4: Feature Extraction Subsystem (`app/ai/feature_extraction/`)
+- **Librosa Extraction Engine**: `FeatureExtractor` computing 7 acoustic feature representations: MFCC (40 coefficients), Mel Spectrogram (128 dB bands), Zero Crossing Rate (ZCR), Spectral Centroid, Spectral Bandwidth, Spectral Rolloff, and Chroma STFT (12 bins).
+- **Label Encoding**: `LabelEncoder` managing bidirectional mapping between class strings and integer IDs (`0, 1, 2, 3, 4`), persisted to `app/ai/features/class_names.json`.
+- **Feature Normalization**: `FeatureNormalizer` computing zero-data-leakage Z-score/MinMax scaling parameters on training data and saving parameters to `app/ai/features/scaler_params.json`.
+- **Stratified Dataset Splitter**: `StratifiedDatasetSplitter` performing reproducible 70% Train / 15% Validation / 15% Testing dataset splits using configurable random seed (`random_seed=42`).
+- **Feature Storage & Metadata**: `FeatureStorageManager` serializing compressed dataset archives (`dataset_splits.npz`) and exporting extraction reports (`app/ai/features/feature_metadata.json`).
+- **Feature Visualizer**: `FeatureVisualizer` generating Mel Spectrogram heatmaps, MFCC heatmaps, and class distribution bar charts (`app/outputs/feature_visualizations/`).
+- **Batch Extraction Pipeline**: `FeatureExtractionPipeline` orchestrating automated end-to-end dataset feature extraction.
+
 ---
 
-## Audio Preprocessing Workflow
+## Audio Feature Extraction Pipeline
 
 ```
-Raw Audio Sample (.wav, .mp3, .flac)
+Preprocessed 22,050 Hz WAV (dataset/processed/)
         │
         ▼
-[AudioLoader] ───────────────> Unpack PCM Waveform Data
+[Audio Validation & Load] ───────> Verify 1D Array & Finite Signal Values
         │
         ▼
-[AudioStandardizer] ─────────> Convert to Mono -> Resample to 22,050 Hz -> Peak Normalize
+[Feature Extractor Engine] ──────> Extract MFCC, Mel Spectrogram, ZCR, Centroid, Bandwidth, Rolloff, Chroma
         │
         ▼
-[SilenceProcessor] ──────────> Trim Leading & Trailing Silence (-40 dB Threshold)
+[LabelEncoder] ──────────────────> Map Class Names -> Integer IDs (class_names.json)
         │
         ▼
-[NoiseReducer] ──────────────> Apply Background Noise Filter (Optional)
+[Stratified Dataset Splitter] ───> 70% Training / 15% Validation / 15% Testing (Seed=42)
         │
         ▼
-[LengthStandardizer] ────────> Trim / Zero-Pad to Exact 4.0s (88,200 Samples)
+[Feature Normalizer] ────────────> Z-Score Scaling fitted on Training Split (scaler_params.json)
         │
         ▼
-[MetadataGenerator & Writer] ─> Save 16-bit PCM WAV to dataset/processed/{class}/ & Export JSON
+[Storage & Metadata Generator] ──> Save dataset_splits.npz & feature_metadata.json to app/ai/features/
+        │
+        ▼
+[Feature Visualizer] ────────────> Export Heatmaps & Bar Charts to app/outputs/feature_visualizations/
 ```
 
 ---
 
 ## Target Sound Classes
 
-1. **Ambulance**: Emergency siren audio samples (`ambulance/`)
-2. **Car Horn**: Traffic and automotive horn warnings (`car_horn/`)
-3. **Fire Alarm**: Critical fire alarms and smoke detectors (`fire_alarm/`)
-4. **Doorbell**: Domestic entrance chimes and bells (`doorbell/`)
-5. **Dog Bark**: Domestic animal bark warnings (`dog_bark/`)
+1. **Ambulance**: Emergency siren audio samples (`ambulance/` -> ID `0`)
+2. **Car Horn**: Traffic and automotive horn warnings (`car_horn/` -> ID `1`)
+3. **Fire Alarm**: Critical fire alarms and smoke detectors (`fire_alarm/` -> ID `2`)
+4. **Doorbell**: Domestic entrance chimes and bells (`doorbell/` -> ID `3`)
+5. **Dog Bark**: Domestic animal bark warnings (`dog_bark/` -> ID `4`)
 
 ---
 
@@ -91,8 +103,9 @@ Raw Audio Sample (.wav, .mp3, .flac)
 
 - **Core Runtime**: Python 3.11
 - **Architecture**: Clean Architecture, SOLID Principles, Object-Oriented Design
+- **Signal & Feature Processing**: `librosa`, `scipy`, `numpy`
+- **Visualization**: `matplotlib`
 - **Configuration & Environment**: Dataclasses, `python-dotenv`, `pydantic`
-- **Data & Signal Utilities**: Standard library `wave`, `struct`, `math`, `hashlib`, `json`, `dataclasses`
 - **Web & API Framework**: FastAPI, Uvicorn
 - **BLE Hardware Communication**: Bleak, custom 6-byte binary packet protocol
 - **Testing**: Python `unittest`, `pytest`, `pytest-asyncio`
@@ -125,7 +138,8 @@ Smart-Haptic-Alert-System/
 │   ├── ai/                             # Machine Learning Subsystem
 │   │   ├── dataset/                    # Dataset Management (Loader, Validator, Explorer, Stats)
 │   │   ├── preprocessing/              # Audio Preprocessing (Standardizer, Silence, Noise, Length)
-│   │   ├── feature_extraction/        # Log-Mel Spectrogram extraction
+│   │   ├── feature_extraction/        # Feature Extractor, Label Encoder, Normalizer, Splitter, Storage, Visualizer
+│   │   ├── features/                   # Extracted .npz arrays, class_names.json, scaler_params.json, metadata
 │   │   ├── training/                   # Trainer pipeline & model exporter
 │   │   ├── inference/                  # Real-time sound inference engine
 │   │   ├── models/                     # Base model contracts & ModelFactory
@@ -144,7 +158,7 @@ Smart-Haptic-Alert-System/
 │   ├── services/                       # Core business logic services
 │   ├── utils/                          # Structured logger & helper utilities
 │   ├── tests/                          # Automated test suites
-│   ├── outputs/                        # Model binaries & visual artifacts
+│   ├── outputs/                        # Feature visualizations & model binaries
 │   ├── logs/                           # System execution log storage
 │   └── docs/                           # Software Architecture & progress specifications
 │
@@ -155,10 +169,10 @@ Smart-Haptic-Alert-System/
 
 ## Next Phase to Implement
 
-**Phase 4: Feature Extraction Subsystem (`app/ai/feature_extraction/`)**
-- Transform 4.0s 22050 Hz preprocessed audio files from `dataset/processed/` into Log-Mel Spectrogram feature matrices.
-- Configurable FFT window size (`n_fft=512`), hop length (`hop_length=160`), and Mel filterbank bins (`n_mels=64`).
-- Save extracted feature tensors for neural network model training.
+**Phase 5: AI Model Training & Quantization (`app/ai/training/` & `app/ai/models/`)**
+- Load extracted dataset splits (`dataset_splits.npz`), class mappings (`class_names.json`), and scaler parameters (`scaler_params.json`).
+- Build and train deep Convolutional Neural Network (CNN) architecture for environmental sound classification across target classes.
+- Export trained model weights and TFLite quantized model binaries for edge device deployment.
 
 ---
 
@@ -167,6 +181,13 @@ Smart-Haptic-Alert-System/
 ### Execute System Bootstrap
 ```bash
 python main.py
+```
+
+### Run Feature Extraction Batch Pipeline
+```python
+from app.ai.feature_extraction import FeatureExtractionPipeline
+pipeline = FeatureExtractionPipeline()
+summary = pipeline.run(generate_visualizations=True)
 ```
 
 ### Run Automated Test Suite

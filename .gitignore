@@ -61,6 +61,9 @@ app/logs/*.log
 !app/logs/.gitkeep
 app/outputs/*
 !app/outputs/README.md
+!app/outputs/.gitkeep
+app/ai/features/*.npz
+app/ai/features/*.npy
 
 # Saved models & Checkpoints
 *.h5
