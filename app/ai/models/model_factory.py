@@ -1,8 +1,9 @@
 """Model Factory for environmental sound classifiers."""
 
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Type, Union
+from typing import Any, Dict, List, Optional, Tuple, Type, Union
 from app.ai.models.base_model import BaseSoundClassifier
+from app.ai.models.cnn_classifier import CNNSoundClassifier
 from app.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -45,6 +46,8 @@ class ModelFactory:
     _registry: Dict[str, Type[BaseSoundClassifier]] = {
         "mock": StarterMockClassifier,
         "starter": StarterMockClassifier,
+        "cnn": CNNSoundClassifier,
+        "sound_classifier": CNNSoundClassifier,
     }
 
     @classmethod

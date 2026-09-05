@@ -60,17 +60,28 @@ Structured into decoupled pipeline phases:
 - **`dataset/`**: Directory management, multi-format loading (`.wav`, `.mp3`, `.flac`), validation, statistics, and exploration. Target classes: `ambulance`, `car_horn`, `fire_alarm`, `doorbell`, `dog_bark`.
 - **`preprocessing/`**: Audio loading (`AudioLoader`), format & rate standardization to **22,050 Hz Mono** (`AudioStandardizer`), silence trimming (`SilenceProcessor`), optional noise reduction (`NoiseReducer`), fixed **4.0-second length standardization** (`LengthStandardizer`), and batch execution (`PreprocessingPipeline`).
 - **`feature_extraction/`**: Librosa-based 7-feature extraction (`FeatureExtractor`), persistent label encoding (`LabelEncoder`), Z-score/MinMax feature normalization (`FeatureNormalizer`), stratified 70/15/15 train/val/test splitting (`StratifiedDatasetSplitter`), storage manager (`FeatureStorageManager`), visualization generator (`FeatureVisualizer`), and batch execution (`FeatureExtractionPipeline`).
-- **`models/`**: `BaseSoundClassifier` contract, `ModelFactory`, and `StarterMockClassifier`.
-- **`training/`**: Training pipeline loop and TFLite quantization exporter.
-- **`inference/`**: End-to-end `SoundInferenceEngine` integrating preprocessor, feature extractor, and classifier.
+- **`models/`**: `BaseSoundClassifier` contract, `ModelFactory` registry, and `CNNSoundClassifier` (hierarchical 2D CNN with 111,237 parameters optimized for composite 184x173 acoustic feature maps).
+- **`training/`**: `TrainingDataLoader` with feature/label validation and class weighting, `ModelTrainer` with early stopping, model checkpointing (`sound_classifier_best.keras`), and learning rate scheduling, `TrainingVisualizer` for accuracy/loss curves, and `TrainingPipeline` for end-to-end training orchestration.
+- **`evaluation/`**: `EvaluationDataLoader` with test split verification, `EvaluationMetricsCalculator` (accuracy, cross-entropy loss, per-class metrics, macro/weighted averages), `ConfusionMatrixGenerator` (raw and recall-normalized), `PredictionAnalyzer` (confidence score stats and error pairs), `EvaluationVisualizer` (heatmaps, bar charts, confidence distribution), `EvaluationReportGenerator` (JSON & TXT reports), and master `ModelEvaluator` orchestrator.
+- **`inference/`**: Real-time acoustic recognition subsystem (`RealtimeSoundRecognizer`, `AudioDeviceManager`, `MicrophoneAudioCapture`, `InferenceModelLoader`, `PredictionStabilizer`). Implements non-blocking circular buffer capture (4.0s = 88,200 samples at 22,050 Hz), direct reuse of preprocessing and composite feature extraction pipelines, single-load model caching with warm-up pass, configurable confidence gating (>= 70%), temporal consensus stabilization (N=3, K=2), and interactive CLI (`app.ai.inference.cli`).
 
 ### 2.2 Environmental Context Subsystem (`app/context/`)
-- `ContextManager`: Evaluates incoming sound events against active `EnvironmentMode` (`HOME`, `ROAD`, `OFFICE`).
-- Sound priority levels (`CRITICAL`, `HIGH`, `MEDIUM`, `LOW`, `IGNORE`) and confidence threshold filters.
+- **`ContextDecisionEngine`**: Evaluates incoming `SoundPrediction` or `PredictionResult` against active `EnvironmentMode` (`HOME`, `ROAD`, `OFFICE`), validates AI confidence against threshold (default: 0.70), and issues structured `DecisionResult` with transparent reasoning.
+- **`PriorityEngine`**: Performs configuration-driven $O(1)$ matrix lookups mapping target sounds (`ambulance`, `car_horn`, `fire_alarm`, `doorbell`, `dog_bark`) to `PriorityLevel` (`HIGH`, `MEDIUM`, `LOW`, `IGNORE`).
+- **`ModeManager`**: Manages active user operating mode state, validates transitions, alerts observer callbacks, and provides safe resets.
+- **`ContextManager`**: High-level facade integrating the decision engine and mode manager while preserving backward compatibility.
 
 ### 2.3 Bluetooth Hardware Subsystem (`app/bluetooth/`)
 - `HapticPacketSerializer`: Encodes alert ID and priority into a 6-byte binary payload.
-- `ESP32BLEManager`: Manages BLE GATT characteristic writes to the ESP32 wristband.
+- `ESP32BLEManager`: Manages BLE GATT characteristic writes to the ESP32 wristband (to be implemented in Phase 9).
+
+### 2.4 Software Integration Service & Web Prototype (`app/services/` & `app/web/`)
+- **`SoftwareIntegrationService`**: Coordinates Phase 7 real-time recognition, Phase 8 context decision engine, and mode manager. Provides sample audio evaluation, demo simulation, live microphone streaming, scenario testing, and in-memory alert history.
+- **FastAPI REST API Layer (`app/api/routes.py`)**: Modular endpoints for status, mode control, test audio evaluation, demo simulation, and scenario benchmarking.
+- **Web Frontend Prototype (`app/web/`)**: Vanilla HTML5/CSS/JS dashboard displaying system status, mode control, live inference cards, confidence bars, priority badges, test audio analysis, demo simulation, and recent alert history without any external hardware requirements.
+
+### 2.5 Hardware Independence Statement
+The system operates completely in **software-only mode** during verification. Physical hardware (ESP32, INMP441, vibration motor, Bluetooth LE) was **NOT required** for this integration phase.
 
 ---
 

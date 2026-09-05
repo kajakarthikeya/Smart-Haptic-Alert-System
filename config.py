@@ -143,6 +143,165 @@ class FeatureExtractionConfig:
 
 
 @dataclass(frozen=True)
+class TrainingConfig:
+    """AI Model Training and Optimization parameters."""
+    batch_size: int = field(default_factory=lambda: int(os.getenv("TRAINING_BATCH_SIZE", "4")))
+    epochs: int = field(default_factory=lambda: int(os.getenv("TRAINING_EPOCHS", "50")))
+    learning_rate: float = field(default_factory=lambda: float(os.getenv("TRAINING_LEARNING_RATE", "0.001")))
+    optimizer: str = field(default_factory=lambda: os.getenv("TRAINING_OPTIMIZER", "adam"))
+    loss_function: str = field(
+        default_factory=lambda: os.getenv("TRAINING_LOSS_FUNCTION", "sparse_categorical_crossentropy")
+    )
+    dropout_rate: float = field(default_factory=lambda: float(os.getenv("TRAINING_DROPOUT_RATE", "0.3")))
+    random_seed: int = field(default_factory=lambda: int(os.getenv("TRAINING_RANDOM_SEED", "42")))
+    early_stopping_patience: int = field(
+        default_factory=lambda: int(os.getenv("EARLY_STOPPING_PATIENCE", "15"))
+    )
+    reduce_lr_patience: int = field(
+        default_factory=lambda: int(os.getenv("REDUCE_LR_PATIENCE", "7"))
+    )
+    model_save_dir: Path = field(
+        default_factory=lambda: BASE_DIR / os.getenv("MODEL_SAVE_DIR", "app/ai/models")
+    )
+    training_output_dir: Path = field(
+        default_factory=lambda: BASE_DIR / os.getenv("TRAINING_OUTPUT_DIR", "app/outputs/model_training")
+    )
+
+
+@dataclass(frozen=True)
+class ModelConfig:
+    """AI Sound Classifier Model architectural parameters."""
+    model_name: str = field(default_factory=lambda: os.getenv("MODEL_NAME", "sound_classifier_cnn"))
+    model_version: str = field(default_factory=lambda: os.getenv("MODEL_VERSION", "0.5.0"))
+    input_shape: tuple[int, int, int] = (184, 173, 1)
+    num_classes: int = 5
+    best_model_filename: str = field(
+        default_factory=lambda: os.getenv("BEST_MODEL_FILENAME", "sound_classifier_best.keras")
+    )
+    final_model_filename: str = field(
+        default_factory=lambda: os.getenv("FINAL_MODEL_FILENAME", "sound_classifier_final.keras")
+    )
+    metadata_filename: str = field(
+        default_factory=lambda: os.getenv("MODEL_METADATA_FILENAME", "model_metadata.json")
+    )
+
+
+@dataclass(frozen=True)
+class EvaluationConfig:
+    """AI Model Evaluation and Benchmarking settings."""
+    output_dir: Path = field(
+        default_factory=lambda: BASE_DIR / os.getenv("EVALUATION_OUTPUT_DIR", "app/outputs/model_evaluation")
+    )
+    features_path: Path = field(
+        default_factory=lambda: BASE_DIR / os.getenv("EVALUATION_FEATURES_PATH", "app/ai/features/dataset_splits.npz")
+    )
+    model_path: Path = field(
+        default_factory=lambda: BASE_DIR / os.getenv("EVALUATION_MODEL_PATH", "app/ai/models/sound_classifier_best.keras")
+    )
+    class_names_path: Path = field(
+        default_factory=lambda: BASE_DIR / os.getenv("EVALUATION_CLASS_NAMES_PATH", "app/ai/features/class_names.json")
+    )
+    predictions_csv_filename: str = field(
+        default_factory=lambda: os.getenv("PREDICTIONS_CSV_FILENAME", "predictions.csv")
+    )
+    classification_report_filename: str = field(
+        default_factory=lambda: os.getenv("CLASSIFICATION_REPORT_FILENAME", "classification_report.json")
+    )
+    classification_report_json_filename: str = field(
+        default_factory=lambda: os.getenv("CLASSIFICATION_REPORT_FILENAME", "classification_report.json")
+    )
+    evaluation_metrics_filename: str = field(
+        default_factory=lambda: os.getenv("EVALUATION_METRICS_FILENAME", "evaluation_metrics.json")
+    )
+    evaluation_metrics_json_filename: str = field(
+        default_factory=lambda: os.getenv("EVALUATION_METRICS_FILENAME", "evaluation_metrics.json")
+    )
+    evaluation_report_txt_filename: str = field(
+        default_factory=lambda: os.getenv("EVALUATION_REPORT_TXT_FILENAME", "evaluation_report.txt")
+    )
+    confusion_matrix_filename: str = field(
+        default_factory=lambda: os.getenv("CONFUSION_MATRIX_FILENAME", "confusion_matrix.png")
+    )
+    norm_confusion_matrix_filename: str = field(
+        default_factory=lambda: os.getenv("NORM_CONFUSION_MATRIX_FILENAME", "normalized_confusion_matrix.png")
+    )
+    normalized_confusion_matrix_filename: str = field(
+        default_factory=lambda: os.getenv("NORM_CONFUSION_MATRIX_FILENAME", "normalized_confusion_matrix.png")
+    )
+    metrics_comparison_filename: str = field(
+        default_factory=lambda: os.getenv("METRICS_COMPARISON_FILENAME", "metrics_comparison.png")
+    )
+    confidence_distribution_filename: str = field(
+        default_factory=lambda: os.getenv("CONFIDENCE_DIST_FILENAME", "confidence_distribution.png")
+    )
+    low_confidence_threshold: float = field(
+        default_factory=lambda: float(os.getenv("LOW_CONFIDENCE_THRESHOLD", "0.50"))
+    )
+
+
+@dataclass(frozen=True)
+class InferenceConfig:
+    """Real-time sound recognition and inference configuration."""
+    model_path: Path = field(
+        default_factory=lambda: BASE_DIR / os.getenv("INFERENCE_MODEL_PATH", "app/ai/models/sound_classifier_best.keras")
+    )
+    metadata_path: Path = field(
+        default_factory=lambda: BASE_DIR / os.getenv("INFERENCE_METADATA_PATH", "app/ai/models/model_metadata.json")
+    )
+    class_mapping_path: Path = field(
+        default_factory=lambda: BASE_DIR / os.getenv("INFERENCE_CLASS_MAPPING_PATH", "app/ai/features/class_names.json")
+    )
+    sample_rate: int = field(default_factory=lambda: int(os.getenv("INFERENCE_SAMPLE_RATE", "22050")))
+    channels: int = field(default_factory=lambda: int(os.getenv("INFERENCE_CHANNELS", "1")))
+    window_duration_sec: float = field(
+        default_factory=lambda: float(os.getenv("INFERENCE_WINDOW_DURATION_SEC", "4.0"))
+    )
+    hop_duration_sec: float = field(
+        default_factory=lambda: float(os.getenv("INFERENCE_HOP_DURATION_SEC", "1.0"))
+    )
+    block_size: int = field(default_factory=lambda: int(os.getenv("INFERENCE_BLOCK_SIZE", "1024")))
+    confidence_threshold: float = field(
+        default_factory=lambda: float(os.getenv("INFERENCE_CONFIDENCE_THRESHOLD", "0.70"))
+    )
+    stability_buffer_size: int = field(
+        default_factory=lambda: int(os.getenv("INFERENCE_STABILITY_BUFFER_SIZE", "3"))
+    )
+    required_agreement: int = field(
+        default_factory=lambda: int(os.getenv("INFERENCE_REQUIRED_AGREEMENT", "2"))
+    )
+    input_device_id: Optional[int] = field(
+        default_factory=lambda: (
+            int(os.getenv("INFERENCE_INPUT_DEVICE_ID"))
+            if os.getenv("INFERENCE_INPUT_DEVICE_ID") is not None
+            else None
+        )
+    )
+
+
+@dataclass(frozen=True)
+class ContextConfig:
+    """Context-aware decision engine settings."""
+    default_mode: str = field(default_factory=lambda: os.getenv("CONTEXT_DEFAULT_MODE", "HOME").upper())
+    confidence_threshold: float = field(
+        default_factory=lambda: float(
+            os.getenv("CONTEXT_CONFIDENCE_THRESHOLD", os.getenv("INFERENCE_CONFIDENCE_THRESHOLD", "0.70"))
+        )
+    )
+    alert_on_high: bool = field(
+        default_factory=lambda: os.getenv("CONTEXT_ALERT_ON_HIGH", "true").lower() == "true"
+    )
+    alert_on_medium: bool = field(
+        default_factory=lambda: os.getenv("CONTEXT_ALERT_ON_MEDIUM", "true").lower() == "true"
+    )
+    alert_on_low: bool = field(
+        default_factory=lambda: os.getenv("CONTEXT_ALERT_ON_LOW", "false").lower() == "true"
+    )
+    alert_on_ignore: bool = field(
+        default_factory=lambda: os.getenv("CONTEXT_ALERT_ON_IGNORE", "false").lower() == "true"
+    )
+
+
+@dataclass(frozen=True)
 class PathConfig:
     """File system paths for model artifacts, logs, and outputs."""
     base_dir: Path = BASE_DIR
@@ -165,6 +324,11 @@ class AppSettings:
         self.dataset = DatasetConfig()
         self.preprocessing = PreprocessingConfig()
         self.feature_extraction = FeatureExtractionConfig()
+        self.training = TrainingConfig()
+        self.model = ModelConfig()
+        self.evaluation = EvaluationConfig()
+        self.inference = InferenceConfig()
+        self.context = ContextConfig()
 
         # Ensure directories exist
         self.paths.log_dir.mkdir(parents=True, exist_ok=True)
@@ -172,6 +336,9 @@ class AppSettings:
         self.dataset.processed_dir.mkdir(parents=True, exist_ok=True)
         self.feature_extraction.features_dir.mkdir(parents=True, exist_ok=True)
         self.feature_extraction.visualization_dir.mkdir(parents=True, exist_ok=True)
+        self.training.model_save_dir.mkdir(parents=True, exist_ok=True)
+        self.training.training_output_dir.mkdir(parents=True, exist_ok=True)
+        self.evaluation.output_dir.mkdir(parents=True, exist_ok=True)
 
     def reload(self) -> None:
         """Reload environment settings dynamically."""
@@ -181,3 +348,4 @@ class AppSettings:
 
 # Global singleton instance for settings access
 settings = AppSettings()
+Config = settings

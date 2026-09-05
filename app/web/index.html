@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Haptic Alert System — Software Integration Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="app-background">
+        <div class="glow-orb orb-1"></div>
+        <div class="glow-orb orb-2"></div>
+        <div class="glow-orb orb-3"></div>
+    </div>
+
+    <div class="app-container">
+        <!-- Top Navigation Bar -->
+        <header class="app-header glass-card">
+            <div class="brand-section">
+                <div class="logo-badge">
+                    <span class="pulse-ring"></span>
+                    <span class="logo-icon">🔊</span>
+                </div>
+                <div>
+                    <h1 class="brand-title">Smart Haptic Alert System</h1>
+                    <div class="brand-subtitle">
+                        <span class="badge badge-indigo">Software-Only Prototype</span>
+                        <span class="badge badge-dark">Phases 1–8 Integrated</span>
+                        <span class="badge badge-amber" id="hw-badge">Hardware: Not Required</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Operating Mode Selector -->
+            <div class="mode-selector-wrapper">
+                <span class="mode-label">Active Environment Mode</span>
+                <div class="mode-button-group">
+                    <button class="mode-btn active" id="btn-mode-home" onclick="setOperatingMode('HOME')">
+                        <span class="mode-icon">🏠</span>
+                        <span class="mode-text">Home</span>
+                    </button>
+                    <button class="mode-btn" id="btn-mode-road" onclick="setOperatingMode('ROAD')">
+                        <span class="mode-icon">🚗</span>
+                        <span class="mode-text">Road</span>
+                    </button>
+                    <button class="mode-btn" id="btn-mode-office" onclick="setOperatingMode('OFFICE')">
+                        <span class="mode-icon">🏢</span>
+                        <span class="mode-text">Office</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- System Diagnostic Health Strip -->
+        <section class="diagnostic-strip glass-card">
+            <div class="diag-item">
+                <span class="diag-dot green-dot"></span>
+                <div class="diag-content">
+                    <span class="diag-title">AI Model</span>
+                    <span class="diag-val" id="diag-model">Loaded (CNN 111k)</span>
+                </div>
+            </div>
+            <div class="diag-divider"></div>
+            <div class="diag-item">
+                <span class="diag-dot green-dot"></span>
+                <div class="diag-content">
+                    <span class="diag-title">Inference Engine</span>
+                    <span class="diag-val" id="diag-inference">Ready (22.05 kHz)</span>
+                </div>
+            </div>
+            <div class="diag-divider"></div>
+            <div class="diag-item">
+                <span class="diag-dot green-dot"></span>
+                <div class="diag-content">
+                    <span class="diag-title">Context Engine</span>
+                    <span class="diag-val" id="diag-context">Ready (Mode: HOME)</span>
+                </div>
+            </div>
+            <div class="diag-divider"></div>
+            <div class="diag-item">
+                <span class="diag-dot cyan-dot"></span>
+                <div class="diag-content">
+                    <span class="diag-title">Audio Intake</span>
+                    <span class="diag-val" id="diag-audio">Test Mode / Demo</span>
+                </div>
+            </div>
+            <div class="diag-divider"></div>
+            <div class="diag-item">
+                <span class="diag-dot muted-dot"></span>
+                <div class="diag-content">
+                    <span class="diag-title">Physical Wearable</span>
+                    <span class="diag-val text-muted" id="diag-hw">Not Connected (Simulated)</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Main Workspace Grid -->
+        <main class="main-dashboard-grid">
+            <!-- Left Column: Active Alert Card & Real-Time Telemetry -->
+            <section class="left-panel">
+                <!-- Active Detection & Decision Card -->
+                <div class="decision-card glass-card" id="active-decision-card">
+                    <div class="card-header-flex">
+                        <span class="card-kicker">Latest Decision Event</span>
+                        <span class="source-tag" id="res-source">Awaiting Detection</span>
+                    </div>
+
+                    <div class="sound-presentation">
+                        <div class="sound-avatar" id="res-avatar">🎵</div>
+                        <div class="sound-meta">
+                            <h2 class="sound-name" id="res-sound">No Sound Detected</h2>
+                            <span class="sound-timestamp" id="res-timestamp">System ready. Select a test audio file or demo sound.</span>
+                        </div>
+                    </div>
+
+                    <!-- Meters Grid -->
+                    <div class="meters-grid">
+                        <div class="meter-box">
+                            <span class="meter-lbl">Model Confidence</span>
+                            <div class="confidence-bar-wrap">
+                                <div class="confidence-bar-fill" id="conf-bar-fill" style="width: 0%;"></div>
+                            </div>
+                            <span class="meter-val mono" id="res-conf">0.0%</span>
+                        </div>
+
+                        <div class="meter-box">
+                            <span class="meter-lbl">Urgency Priority</span>
+                            <div class="priority-pill pill-ignore" id="res-priority">NONE</div>
+                        </div>
+
+                        <div class="meter-box">
+                            <span class="meter-lbl">Alert Dispatch</span>
+                            <div class="alert-flag flag-no" id="res-alert">NO ALERT</div>
+                        </div>
+                    </div>
+
+                    <!-- Context Reasoning Banner -->
+                    <div class="reason-banner" id="reason-box">
+                        <span class="reason-icon">💡</span>
+                        <p class="reason-text" id="res-reason">Awaiting audio input to evaluate context rules.</p>
+                    </div>
+
+                    <!-- Processing Latency Telemetry -->
+                    <div class="latency-strip">
+                        <span class="latency-item"><span class="latency-lbl">Prep:</span> <span id="lat-prep" class="mono">--</span></span>
+                        <span class="latency-item"><span class="latency-lbl">Features:</span> <span id="lat-feat" class="mono">--</span></span>
+                        <span class="latency-item"><span class="latency-lbl">CNN:</span> <span id="lat-infer" class="mono">--</span></span>
+                        <span class="latency-item highlight"><span class="latency-lbl">Total Turnaround:</span> <span id="lat-total" class="mono">--</span></span>
+                    </div>
+                </div>
+
+                <!-- Recent Alerts History Card -->
+                <div class="history-card glass-card">
+                    <div class="card-header-flex">
+                        <h3 class="panel-title">Decision History Log</h3>
+                        <button class="text-btn" onclick="clearHistory()">Clear History</button>
+                    </div>
+                    <div class="history-table-wrapper">
+                        <table class="history-table">
+                            <thead>
+                                <tr>
+                                    <th>Time</th>
+                                    <th>Sound</th>
+                                    <th>Mode</th>
+                                    <th>Confidence</th>
+                                    <th>Priority</th>
+                                    <th>Alert</th>
+                                </tr>
+                            </thead>
+                            <tbody id="history-tbody">
+                                <tr>
+                                    <td colspan="6" class="empty-state">No events recorded yet.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Right Column: Interactive Pipelines (Tabs) -->
+            <section class="right-panel">
+                <div class="interactive-card glass-card">
+                    <!-- Tab Headers -->
+                    <nav class="pipeline-tabs">
+                        <button class="tab-btn active" onclick="switchTab('test-audio-tab')">
+                            <span>📂</span> Test Audio Mode
+                        </button>
+                        <button class="tab-btn" onclick="switchTab('demo-sim-tab')">
+                            <span>🎮</span> Demo Simulation
+                        </button>
+                        <button class="tab-btn" onclick="switchTab('realtime-tab')">
+                            <span>🎙</span> Live Microphone
+                        </button>
+                        <button class="tab-btn" onclick="switchTab('scenarios-tab')">
+                            <span>🧪</span> 7 Scenarios Matrix
+                        </button>
+                    </nav>
+
+                    <!-- Tab 1: Test Audio File Mode -->
+                    <div class="tab-content active" id="test-audio-tab">
+                        <div class="tab-description">
+                            <p class="text-sm">
+                                <strong>Hardware-Free Audio Testing:</strong> Process real WAV audio recordings through the complete pipeline:
+                                <br>
+                                <code>WAV File</code> &rarr; <code>Phase 3 Preprocessing</code> &rarr; <code>Phase 4 Features</code> &rarr; <code>Phase 5 CNN</code> &rarr; <code>Phase 7 Inference</code> &rarr; <code>Phase 8 Context</code>
+                            </p>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="sample-select" class="form-label">Select Pre-loaded Sound Class Sample:</label>
+                            <select id="sample-select" class="custom-select">
+                                <option value="" disabled selected>Loading samples...</option>
+                            </select>
+                        </div>
+
+                        <div class="btn-row">
+                            <button class="primary-btn" id="btn-run-sample" onclick="runSelectedSample()">
+                                <span class="btn-icon">▶</span> Run Audio Inference
+                            </button>
+                            <span class="or-divider">OR</span>
+                            <label class="secondary-btn upload-label">
+                                <span>📤 Upload WAV</span>
+                                <input type="file" id="file-upload" accept=".wav,.mp3,.flac" style="display: none;" onchange="uploadAudioFile(this)">
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Tab 2: Demo / Simulation Mode -->
+                    <div class="tab-content" id="demo-sim-tab">
+                        <div class="simulation-banner">
+                            <span class="sim-tag">SIMULATION MODE</span>
+                            <span class="text-xs text-muted">Directly tests Phase 8 Context Decision rules across the 5 target sounds.</span>
+                        </div>
+
+                        <div class="confidence-slider-group">
+                            <div class="slider-header">
+                                <span class="form-label">Simulated AI Confidence:</span>
+                                <span class="slider-val mono" id="slider-conf-val">92%</span>
+                            </div>
+                            <input type="range" id="sim-confidence-slider" min="0" max="100" value="92" class="range-slider" oninput="updateSliderVal(this.value)">
+                            <div class="slider-ticks text-xs">
+                                <span>0% (Low)</span>
+                                <span class="text-amber">70% (Gate Threshold)</span>
+                                <span>100%</span>
+                            </div>
+                        </div>
+
+                        <label class="form-label">Trigger Target Environmental Sound:</label>
+                        <div class="demo-buttons-grid">
+                            <button class="demo-sound-btn" onclick="simulateSound('ambulance')">
+                                <span class="demo-icon">🚑</span>
+                                <span class="demo-name">Ambulance</span>
+                                <span class="demo-desc">Emergency Siren</span>
+                            </button>
+                            <button class="demo-sound-btn" onclick="simulateSound('car_horn')">
+                                <span class="demo-icon">📢</span>
+                                <span class="demo-name">Car Horn</span>
+                                <span class="demo-desc">Traffic Warning</span>
+                            </button>
+                            <button class="demo-sound-btn" onclick="simulateSound('fire_alarm')">
+                                <span class="demo-icon">🚨</span>
+                                <span class="demo-name">Fire Alarm</span>
+                                <span class="demo-desc">Evacuation Alarm</span>
+                            </button>
+                            <button class="demo-sound-btn" onclick="simulateSound('doorbell')">
+                                <span class="demo-icon">🔔</span>
+                                <span class="demo-name">Doorbell</span>
+                                <span class="demo-desc">Entrance Chime</span>
+                            </button>
+                            <button class="demo-sound-btn" onclick="simulateSound('dog_bark')">
+                                <span class="demo-icon">🐕</span>
+                                <span class="demo-name">Dog Bark</span>
+                                <span class="demo-desc">Domestic Warning</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Tab 3: Real-Time Microphone Recognition -->
+                    <div class="tab-content" id="realtime-tab">
+                        <div class="tab-description">
+                            <p class="text-sm">
+                                <strong>Live Acoustic Ingestion:</strong> Captures audio from your laptop/host microphone using Phase 7's 4.0-second non-blocking ring buffer.
+                            </p>
+                        </div>
+
+                        <div class="mic-status-box" id="mic-status-container">
+                            <div class="mic-icon-wrap" id="mic-pulse">
+                                <span>🎙</span>
+                            </div>
+                            <div class="mic-details">
+                                <h4 class="mic-state-heading" id="mic-state-text">Microphone Idle</h4>
+                                <span class="text-xs text-muted" id="mic-device-name">Ready for streaming</span>
+                            </div>
+                        </div>
+
+                        <div class="btn-row">
+                            <button class="primary-btn green-btn" id="btn-start-mic" onclick="toggleMicrophoneStream(true)">
+                                <span>▶</span> Start Recognition
+                            </button>
+                            <button class="primary-btn red-btn" id="btn-stop-mic" onclick="toggleMicrophoneStream(false)" disabled>
+                                <span>⏹</span> Stop Recognition
+                            </button>
+                        </div>
+                        <div id="mic-error-msg" class="error-banner" style="display: none;"></div>
+                    </div>
+
+                    <!-- Tab 4: 7 Verification Scenarios Matrix -->
+                    <div class="tab-content" id="scenarios-tab">
+                        <div class="tab-description">
+                            <p class="text-sm">
+                                <strong>Verification Matrix:</strong> Evaluates all 7 mandatory verification scenarios required by specification against Phase 8.
+                            </p>
+                        </div>
+
+                        <button class="primary-btn w-full" onclick="runAllSevenScenarios()">
+                            <span>⚡</span> Execute All 7 Scenarios
+                        </button>
+
+                        <div class="scenarios-list" id="scenarios-results-box">
+                            <span class="text-muted text-xs">Click the button above to run verification.</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Priority Rules Reference Table Card -->
+                <div class="rules-card glass-card">
+                    <h3 class="panel-title">Active Priority Matrix Reference</h3>
+                    <div class="rules-table-wrapper">
+                        <table class="rules-matrix-table">
+                            <thead>
+                                <tr>
+                                    <th>Sound</th>
+                                    <th>HOME</th>
+                                    <th>ROAD</th>
+                                    <th>OFFICE</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Ambulance</td>
+                                    <td><span class="p-badge high">HIGH</span></td>
+                                    <td><span class="p-badge high">HIGH</span></td>
+                                    <td><span class="p-badge high">HIGH</span></td>
+                                </tr>
+                                <tr>
+                                    <td>Car Horn</td>
+                                    <td><span class="p-badge med">MEDIUM</span></td>
+                                    <td><span class="p-badge high">HIGH</span></td>
+                                    <td><span class="p-badge low">LOW</span></td>
+                                </tr>
+                                <tr>
+                                    <td>Fire Alarm</td>
+                                    <td><span class="p-badge high">HIGH</span></td>
+                                    <td><span class="p-badge high">HIGH</span></td>
+                                    <td><span class="p-badge high">HIGH</span></td>
+                                </tr>
+                                <tr>
+                                    <td>Doorbell</td>
+                                    <td><span class="p-badge high">HIGH</span></td>
+                                    <td><span class="p-badge low">LOW</span></td>
+                                    <td><span class="p-badge low">LOW</span></td>
+                                </tr>
+                                <tr>
+                                    <td>Dog Bark</td>
+                                    <td><span class="p-badge med">MEDIUM</span></td>
+                                    <td><span class="p-badge low">LOW</span></td>
+                                    <td><span class="p-badge low">LOW</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Notification Toast Container -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>
